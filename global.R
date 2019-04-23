@@ -25,7 +25,7 @@ insert_node <- function(network, node_ID, invalidate_CPT = TRUE) {
 ### insert parent-child relation
 add_parent_child_rel <- function(network, parent_ID, child_ID) {
   if(all(c(parent_ID, child_ID) %in% names(network))) {
-    network[[parent_ID]]$Children <- c(child_ID, network[[parent_Id]]$Children) %>% unique
+    network[[parent_ID]]$Children <- c(child_ID, network[[parent_ID]]$Children) %>% unique
     network[[child_ID]]$Parents   <- c(parent_ID, network[[child_ID]]$Parents) %>% unique
     network[[child_ID]]$IS_ROOT   <- FALSE
   }
@@ -43,7 +43,7 @@ get_parent_child_table <- function(network) {
   sapply(parents, function(parent_ID) {
     children <- get_children(network = network, parent_ID)
     tibble(Parent = rep(parent_ID, length(children), Child = children))
-  }) do.call(what = 'rbind')
+  }) %>% do.call(what = 'rbind')
 }
 
 ### deletion of a node
@@ -130,7 +130,7 @@ clear_all_state_from_node <- function(network, node_ID) {
     network[[node_ID]]$CPT <- NULL
     network[[node_ID]]$States <- NULL
     for(child_ID in network[[node_ID]]$Children) {
-      network[[child_ID]]$CPT <-NULL
+      network[[child_ID]]$CPT <- NULL
     }
   }
   network
@@ -208,19 +208,3 @@ add_CPT_to_node <- function(network, node_ID, CPT) {
 # rbn(bnlearn_net_fit,10)
 #
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> eaa26cbd39e305d35552ec2e15a6ce3734504d38

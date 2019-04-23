@@ -4,11 +4,12 @@ options(shiny.testmode = T)
 network <- list()
 
 function(input, output, session) {
+  
   network_data <- reactiveValues(
-    node_list <- NULL,
-    Hyde_plot <- NULL,
-    node_states <- NULL,
-    CPt <- NULL
+    node_list = NULL,
+    Hyde_plot = NULL,
+    node_states = NULL,
+    CPT = NULL
   )
   
   ################################################################################################################
@@ -39,11 +40,11 @@ function(input, output, session) {
       isolate({
         network <<- insert_node(network, input$Parent_ID, invalidate_CPT = FALSE)
         network <<- insert_node(network, input$Child_ID)
-        network <<- add_parent_child_rel(network, parent_ID = input$Parent_ID, child_ID = input$Child_ID)
+        network <<- add_parent_child_rel(network, parent_ID  = input$Parent_ID, child_ID = input$Child_ID)
       })
       #### node ordering using BNlearn and plot using Hydenet ####
       network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
-      network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% Hydenetwork %>% plot
+      network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
     }
   })
   
@@ -95,7 +96,7 @@ function(input, output, session) {
     }
     rm(network_saved)
     network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
-    network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% Hydenetwork %>% plot
+    network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
   })
   
   #### clear the model ####
@@ -113,7 +114,7 @@ function(input, output, session) {
         network <<- delete_node(network, input$Child_ID)
       })
       network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
-      network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% Hydenetwork %>% plot
+      network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
     }
   })
   
