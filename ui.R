@@ -8,6 +8,7 @@ library(HydeNet)
 library(bnlearn)
 library(Rgraphviz)
 library(shinyWidgets)
+library(shinytest)
 
 dashboardPage(skin = 'green',
               dashboardHeader(title = 'Bayesian Network',
