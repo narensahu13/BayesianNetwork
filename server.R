@@ -130,9 +130,9 @@ function(input, output, session) {
   #########################################################################################################
   
   #### Define states of the nodes  ####
-  output$selelct_node_for_states <- renderUI({
+  output$select_node_for_states <- renderUI({
     if(!is.null(network_data$node_list)) {
-      selectInput(inputId = 'select_node_for_states',
+      selectInput(inputId = 'selected_node_for_states',
                   label = 'Select Node',
                   selectize = F,
                   choices = c(Choose ='', as.list(network_data$node_list)))
@@ -145,8 +145,11 @@ function(input, output, session) {
     node_ID <- input$selected_node_for_states
     if(!is.null(node_ID)) {
       network_data$node_states <- get_node_states(network, node_ID)
-      selectizeInput(inputId = 'states_to_add',
-                     choices = c(Choose = '', as.list(network_data$node_list)) )
+      selectizeInput(inputId = 'state_to_add',
+                     choices = c(Choose = '', as.list(network_data$node_states)),
+                     multiple = F,
+                     label = 'Define State',
+                     options = list(placeholder = 'Add state to the node', create = T))
     } else {
       network_data$node_states <- NULL
       return('No node selected')
@@ -198,7 +201,7 @@ function(input, output, session) {
   })
   
   #### clear all state button ####
-  observeEvent(input$clear_states, {
+  observeEvent(input$clear_state, {
     node_ID <- input$selected_node_for_states
     if(!is.null(node_ID)) {
       isolate({
@@ -263,13 +266,13 @@ function(input, output, session) {
   #### add CPT button ####
   observeEvent(input$add_CPT_to_node, {
     node_ID <- input$selected_node_for_probs
-    if(!is.null(node-ID)) {
+    if(!is.null(node_ID)) {
       CPT <- calc_CPT_structure_for_node(network,node_ID)
       dims <- dim(CPT)
       n_dims <- length(dims)
       if(n_dims == 1) {
         states <- dimnames(CPT)[[1]]
-        cpt[] <- sapply(states, function(st) {
+        CPT[] <- sapply(states, function(st) {
           input[[paste0('n_', node_ID, '_s_', st)]]
         })
       } else if(n_dims ==2 ){

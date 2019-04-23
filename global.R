@@ -58,7 +58,7 @@ delete_node <- function(network, node_ID) {
       }
     }
     ## for each child, must remove node_ID from parent
-    for(child in network[[node_Id]]$Children) {
+    for(child in network[[node_ID]]$Children) {
       network[[child]]$Parents <- network[[child]]$Parents %>% Filter(f = function(v) v != node_ID)
       if(0 == length(network[[child]]$Parents)) {
         network[[child]]$Parents <- NULL
@@ -158,7 +158,7 @@ calc_CPT_structure_for_node <- function(network, node_ID) {
   CPT <- c()
   if(node_ID %in% names(network)) {
     node_n_states <- network[[node_ID]]$States %>% length
-    if(network[[node_ID]]$I_ROOT) {
+    if(network[[node_ID]]$IS_ROOT) {
       dimnams <- structure(list(network[[node_ID]]$States), .Names = node_ID)
       CPT     <- array(1/node_n_states, dim = node_n_states, dimnames = dimnams)
     } else {
