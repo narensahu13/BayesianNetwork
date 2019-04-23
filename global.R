@@ -223,3 +223,4 @@ add_CPT_to_node <- function(network, node_ID, CPT) {
 
 
 
+>>>>>>> eaa26cbd39e305d35552ec2e15a6ce3734504d38
