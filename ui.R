@@ -7,9 +7,11 @@ library(shinydashboard)
 library(HydeNet)
 library(bnlearn)
 library(Rgraphviz)
+library(BiocManager)
 library(shinyWidgets)
 library(shinytest)
 library(DiagrammeR)
+library(backports)
 
 dashboardPage(skin = 'green',
               dashboardHeader(title = 'Bayesian Network',
