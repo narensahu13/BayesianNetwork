@@ -75,8 +75,8 @@ function(input, output, session) {
   network <- shiny::observe({
     if(input$dataInput == 1) {
       if(input$net == 1) {
-        load(file = 'network.RData')
-        network <<- network_saved
+        load(file = 'Fraudmodel.RData')
+        network <<- network
       } else if (input$net == 2) {
         load(file = 'network2.RData')
         network <<- network_saved
