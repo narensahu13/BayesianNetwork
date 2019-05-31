@@ -1,22 +1,22 @@
-##ui function
-# library(shiny)
-# library(dplyr)
-# library(shinycssloaders)
-# library(DT)
-# library(shinydashboard)
-# library(HydeNet)
-# library(bnlearn)
-# library(Rgraphviz)
-# library(BiocManager)
-# library(shinyWidgets)
-# library(shinytest)
-# library(DiagrammeR)
-# library(backports)
-list.of.packages <- c("shiny","dplyr","bnlearn","DiagrammeR","backports","shinycssloaders","DT",
-                      "shinydashboard","HydeNet","BiocManager","shinyWidgets","shinytest",'Rgraphviz')
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-lapply(list.of.packages,function(x){library(x,character.only=TRUE)})
+#ui function
+library(shiny)
+library(dplyr)
+library(shinycssloaders)
+library(DT)
+library(shinydashboard)
+library(HydeNet)
+library(bnlearn)
+library(Rgraphviz)
+library(BiocManager)
+library(shinyWidgets)
+library(shinytest)
+library(DiagrammeR)
+library(backports)
+# list.of.packages <- c("shiny","dplyr","bnlearn","DiagrammeR","backports","shinycssloaders","DT",
+#                       "shinydashboard","HydeNet","BiocManager","shinyWidgets","shinytest",'Rgraphviz')
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages)) install.packages(new.packages)
+# lapply(list.of.packages,function(x){library(x,character.only=TRUE)})
 
 getOption("repos")
 options(repos = BiocManager::repositories())
