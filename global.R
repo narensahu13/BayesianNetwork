@@ -90,7 +90,8 @@ mapping_bnlearn_network <- function(network) {
 
 mapping_Hydenet_network <- function(network) {
   strng <- sapply(network, mapping_node, type = 'Hydenet') %>% paste(collapse = '+')
-  paste('~', strng) %>% formula
+  strng <- paste('~', strng)  %>% formula
+  gsub(":", "*", strng, fixed = T) %>% formula
 }
 
 ### parametrising: adding states to a node

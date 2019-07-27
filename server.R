@@ -11,7 +11,10 @@ function(input, output, session) {
     node_states = NULL,
     CPT = NULL
   )
-  
+  HydePlotOptions(variable = list(shape = "ellipse", fillcolor = "#A6DBA0"), 
+                  determ = list(shape = "rect", fillcolor = "#E7D4E8", fontcolor = "#1B7837", linecolor = "#1B7837"),
+                  decision = list(shape = "triangle", fillcolor = "#1B7837", linecolor = "white"),
+                  utility = list(shape = "diamond", fillcolor = "#762A83", fontcolor = "white"))
   ################################################################################################################
   ###### #######################                      Structure            #####################################
   #############################################################################################################
@@ -94,7 +97,7 @@ function(input, output, session) {
       load(file = inFile$datapath)
       network <<- network_saved
     }
-    rm(network_saved)
+    #rm(network_saved)
     network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
     network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
   })
@@ -105,6 +108,7 @@ function(input, output, session) {
     network_data$node_list <- NULL
     network_data$node_states <- NULL
     network_data$Hyde_plot <- NULL
+    network_data$CPT <- NULL
   })
   
   #### delete nodes ####
@@ -115,6 +119,7 @@ function(input, output, session) {
       })
       network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
       network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
+
     }
   })
   
@@ -239,7 +244,7 @@ function(input, output, session) {
       if(n_dims == 1) {
         states <- dimnames(CPT)[[1]]
         lapply(1:length(states), function(ii) {
-          sliderInput(inputId = paste0('n_', node_ID, '_s_', states[ii]),
+          numericInput(inputId = paste0('n_', node_ID, '_s_', states[ii]),
                       label = paste0('State: ', states[ii]),
                       min = 0, max = 1, value = CPT[ii], step = 0.001)
         })
@@ -251,12 +256,32 @@ function(input, output, session) {
             hr(),
             paste0("Parent State: ", parent_states[jj]),
             lapply(1:length(child_states), function(ii) {
-              sliderInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states[jj]),
+              numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states[jj]),
                           label = paste0('Child State: ', child_states[ii]),
                           min = 0, max = 1, value = CPT[ii,jj], step = 0.001)
             })
           )
         })
+      } else if(n_dims ==3 ) {
+        lapply(2:n_dims, function(n) {
+          child_states <- dimnames(CPT)[[1]]
+          parent_states_1 <- dimnames(CPT)[[2]]
+          parent_states_2 <- dimnames(CPT)[[3]]
+          lapply(1:length(parent_states_1), function(kk) {
+          lapply(1:length(parent_states_2), function(jj) {
+            list(
+              hr(),
+              paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]),
+              lapply(1:length(child_states), function(ii) {
+                numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj]),
+                             label = paste0('Child State: ', child_states[ii]),
+                             min = 0, max = 1, value = CPT[ii,kk,jj], step = 0.001)
+              })
+            )
+          })
+          })
+        })
+        
       }
     } else {
       return('No node selected')
@@ -283,6 +308,19 @@ function(input, output, session) {
             input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states[jj])]]
           })
         })
+      } else if(n_dims == 3) {
+        child_states <- dimnames(CPT)[[1]]
+        lapply(2:n_dims, function(n){
+          parent_states_1 <- dimnames(CPT)[[2]]
+          parent_states_2 <- dimnames(CPT)[[3]]
+        CPT[] <- sapply(1:length(parent_states_1), function(kk) {
+          sapply(1:length(parent_states_2), function(jj) {
+          sapply(1:length(child_states), function(ii) {
+            input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj])]]
+          })
+        })
+        })
+        })
       }
       network <<- add_CPT_to_node(network, node_ID, CPT)
       network_data$CPT <- CPT
@@ -296,6 +334,8 @@ function(input, output, session) {
       network_data$CPT %>% as.matrix
     } else if(n_dims == 2) {
       network_data$CPT
+    } else if(n_dims == 3) {
+      network_data$CPT %>% array2df
     }
   })
   

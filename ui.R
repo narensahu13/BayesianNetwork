@@ -12,6 +12,8 @@ library(shinyWidgets)
 library(shinytest)
 library(DiagrammeR)
 library(backports)
+library(arrayhelpers)
+library(abind)
 # list.of.packages <- c("shiny","dplyr","bnlearn","DiagrammeR","backports","shinycssloaders","DT",
 #                       "shinydashboard","HydeNet","BiocManager","shinyWidgets","shinytest",'Rgraphviz')
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
