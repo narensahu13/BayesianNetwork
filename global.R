@@ -202,6 +202,63 @@ add_CPT_to_node <- function(network, node_ID, CPT) {
   network
 }
 
+## Transform the CPT array to presentable dataframe
+transform_CPT <- function(CPT) {
+  dims <- dim(CPT)
+  n_dims <- length(dims)
+  child_states <- dimnames(CPT)[[1]]
+  child_name <- names(dimnames(CPT)[1])
+  for(i in 2: n_dims) { assign(paste0('parent_states_',i-1), dimnames(CPT)[[i]])}
+  for(i in 2: n_dims) { assign(paste0('parent_name_',i-1), names(dimnames(CPT)[i]))}
+  matrix_dim <- c(dims[1]+n_dims-1, prod(dims[-1])+1)
+  df <- data.frame(matrix(NA, nrow = matrix_dim[1], ncol = matrix_dim[2]))
+  
+  if (n_dims  == 3) {
+    df[,1] <- c(parent_name_1,parent_name_2,child_states)
+    df[2,-1] <- rep(parent_states_1,prod(dims[-1])/dims[2], along = 2)
+    df[1,-1] <- rep(parent_states_2,prod(dims[-1])/dims[3], along = 1) 
+  } else if (n_dims == 4) {
+    df[,1] <- c(parent_name_1,parent_name_2,parent_name_3,child_states)
+    df[3,-1] <- rep(parent_states_1,prod(dims[-1])/dims[2], along = 2)
+    df[2,-1] <- rep(parent_states_2,prod(dims[-1])/dims[3], along = 1)
+    df[1,-1] <- rep(parent_states_3,prod(dims[-1])/dims[4], along = 1)
+  } else if (n_dims == 5) {
+    df[,1] <- c(parent_name_1,parent_name_2,parent_name_3,parent_name_4,child_states)
+    df[4,-1] <- rep(parent_states_1,prod(dims[-1])/dims[2], along = 2)
+    df[3,-1] <- rep(parent_states_2,prod(dims[-1])/dims[3], along = 1)
+    df[2,-1] <- rep(parent_states_3,prod(dims[-1])/dims[4], along = 1)
+    df[1,-1] <- rep(parent_states_4,prod(dims[-1])/dims[5], along = 1)
+  } else if (n_dims == 6) {
+    df[,1] <- c(parent_name_1,parent_name_2,parent_name_3,parent_name_4,parent_name_5,child_states)
+    df[5,-1] <- rep(parent_states_1,prod(dims[-1])/dims[2], along = 2)
+    df[4,-1] <- rep(parent_states_2,prod(dims[-1])/dims[3], along = 1)
+    df[3,-1] <- rep(parent_states_3,prod(dims[-1])/dims[4], along = 1)
+    df[2,-1] <- rep(parent_states_4,prod(dims[-1])/dims[5], along = 1)
+    df[1,-1] <- rep(parent_states_5,prod(dims[-1])/dims[6], along = 1)
+  }
+  df[is.na(df)] <- CPT %>% as.matrix
+  row.names(df)<- colnames(df) <- NULL
+  #formattable(df, list(area(col = 2:matrix_dim[2]) ~ color_tile("transparent", "pink")))
+  datatable(df) %>% formatStyle(
+    2:matrix_dim[2],
+    #target = 'row',
+    backgroundColor = styleInterval(c(0, 1), c('white', 'yellow','white'))
+  )
+  # datatable(df, rownames = FALSE) %>%
+  #   formatStyle(2:matrix_dim[2],
+  #     background = styleEqual(c(4, 5), c(rep("lightblue", 2)))) 
+  return(df)
+}
+
+dt_output = function(title, id) {
+  fluidRow(column(
+    12, h1(paste0('Table ', sub('.*?([0-9]+)$', '\\1', id), ': ', title)),
+    hr(), DTOutput(id)
+  ))
+}
+render_dt = function(data, editable = 'cell', server = TRUE, ...) {
+  renderDT(data, selection = 'none', server = server, editable = editable, ...)
+}
 # network %>% mapping_bnlearn_network
 # bnlearn_net <- network %>% mapping_bnlearn_network %>% model2network
 # 

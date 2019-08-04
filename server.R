@@ -61,20 +61,21 @@ function(input, output, session) {
   # observe({
   #   if(!is.null(network))
   #     isolate(
-  #       network_saved <- network
+  #       network_saved <<- network
   #     )
   # })
   
-  network_saved <- network
+  #network <- network
   output$save_model_to_file <- downloadHandler(
     filename = function() {
       paste0('Model', '.RData')
     },
     content = function(file){
-      save(network_saved, file)
+      save(network, file = file)
     }
   )
   
+  ## Load pre-defined demo models
   network <- shiny::observe({
     if(input$dataInput == 1) {
       if(input$net == 1) {
@@ -82,20 +83,20 @@ function(input, output, session) {
         network <<- network
       } else if (input$net == 2) {
         load(file = 'network2.RData')
-        network <<- network_saved
+        network <<- network
       } else if (input$net == 3) {
         load(file = 'network3.RData')
-        network <<- network_saved
+        network <<- network
       } else if (input$net == 4) {
         load(file = 'network4.RData')
-        network <<- network_saved
+        network <<- network
       }
     } else if (input$dataInput == 2) {
       inFile <- input$load_model_from_file
       if (is.null(inFile))
         return(NULL)
       load(file = inFile$datapath)
-      network <<- network_saved
+      network <<- network
     }
     #rm(network_saved)
     network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
@@ -263,7 +264,6 @@ function(input, output, session) {
           )
         })
       } else if(n_dims ==3 ) {
-        lapply(2:n_dims, function(n) {
           child_states <- dimnames(CPT)[[1]]
           parent_states_1 <- dimnames(CPT)[[2]]
           parent_states_2 <- dimnames(CPT)[[3]]
@@ -279,6 +279,77 @@ function(input, output, session) {
               })
             )
           })
+          })
+        
+      } else if(n_dims ==4 ) {
+          child_states <- dimnames(CPT)[[1]]
+          parent_states_1 <- dimnames(CPT)[[2]]
+          parent_states_2 <- dimnames(CPT)[[3]]
+          parent_states_3 <- dimnames(CPT)[[4]]
+          lapply(1:length(parent_states_1), function(kk) {
+            lapply(1:length(parent_states_2), function(jj) {
+              lapply(1:length(parent_states_3), function(ll) {
+              list(
+                hr(),
+                paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]),
+                lapply(1:length(child_states), function(ii) {
+                  numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll]),
+                               label = paste0('Child State: ', child_states[ii]),
+                               min = 0, max = 1, value = CPT[ii,kk,jj,ll], step = 0.001)
+                })
+              )
+            })
+            })
+          })
+        
+      } else if(n_dims ==5 ) {
+        child_states <- dimnames(CPT)[[1]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_3 <- dimnames(CPT)[[4]]
+        parent_states_4 <- dimnames(CPT)[[5]]
+        lapply(1:length(parent_states_1), function(kk) {
+          lapply(1:length(parent_states_2), function(jj) {
+            lapply(1:length(parent_states_3), function(ll) {
+              lapply(1:length(parent_states_4), function(mm) {
+              list(
+                hr(),
+                paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]," ,", parent_states_4[mm] ),
+                lapply(1:length(child_states), function(ii) {
+                  numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll], parent_states_4[mm]),
+                               label = paste0('Child State: ', child_states[ii]),
+                               min = 0, max = 1, value = CPT[ii,kk,jj,ll,mm], step = 0.001)
+                })
+              )
+            })
+            })
+          })
+        })
+        
+      } else if(n_dims ==6 ) {
+        child_states <- dimnames(CPT)[[1]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_3 <- dimnames(CPT)[[4]]
+        parent_states_4 <- dimnames(CPT)[[5]]
+        parent_states_5 <- dimnames(CPT)[[6]]
+        lapply(1:length(parent_states_1), function(kk) {
+          lapply(1:length(parent_states_2), function(jj) {
+            lapply(1:length(parent_states_3), function(ll) {
+              lapply(1:length(parent_states_4), function(mm) {
+                lapply(1:length(parent_states_5), function(nn) {
+                list(
+                  hr(),
+                  paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]," ,", parent_states_4[mm]," ,", parent_states_5[nn] ),
+                  lapply(1:length(child_states), function(ii) {
+                    numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll], parent_states_4[mm], parent_states_5[nn]),
+                                 label = paste0('Child State: ', child_states[ii]),
+                                 min = 0, max = 1, value = CPT[ii,kk,jj,ll,mm,nn], step = 0.001)
+                  })
+                )
+              })
+              })
+            })
           })
         })
         
@@ -310,7 +381,6 @@ function(input, output, session) {
         })
       } else if(n_dims == 3) {
         child_states <- dimnames(CPT)[[1]]
-        lapply(2:n_dims, function(n){
           parent_states_1 <- dimnames(CPT)[[2]]
           parent_states_2 <- dimnames(CPT)[[3]]
         CPT[] <- sapply(1:length(parent_states_1), function(kk) {
@@ -320,6 +390,56 @@ function(input, output, session) {
           })
         })
         })
+      } else if(n_dims == 4) {
+        child_states <- dimnames(CPT)[[1]]
+          parent_states_1 <- dimnames(CPT)[[2]]
+          parent_states_2 <- dimnames(CPT)[[3]]
+          parent_states_3 <- dimnames(CPT)[[4]]
+          CPT[] <- sapply(1:length(parent_states_1), function(kk) {
+            sapply(1:length(parent_states_2), function(jj) {
+              sapply(1:length(parent_states_3), function(ll) {
+              sapply(1:length(child_states), function(ii) {
+                input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll])]]
+              })
+                })
+            })
+          })
+      } else if(n_dims == 5) {
+        child_states <- dimnames(CPT)[[1]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_3 <- dimnames(CPT)[[4]]
+        parent_states_4 <- dimnames(CPT)[[5]]
+        CPT[] <- sapply(1:length(parent_states_1), function(kk) {
+          sapply(1:length(parent_states_2), function(jj) {
+            sapply(1:length(parent_states_3), function(ll) {
+              sapply(1:length(parent_states_4), function(mm) {
+              sapply(1:length(child_states), function(ii) {
+                input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll],parent_states_4[mm])]]
+              })
+            })
+            })
+          })
+        })
+      } else if(n_dims == 6) {
+        child_states <- dimnames(CPT)[[1]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_3 <- dimnames(CPT)[[4]]
+        parent_states_4 <- dimnames(CPT)[[5]]
+        parent_states_5 <- dimnames(CPT)[[6]]
+        CPT[] <- sapply(1:length(parent_states_1), function(kk) {
+          sapply(1:length(parent_states_2), function(jj) {
+            sapply(1:length(parent_states_3), function(ll) {
+              sapply(1:length(parent_states_4), function(mm) {
+                sapply(1:length(parent_states_5), function(nn) {
+              sapply(1:length(child_states), function(ii) {
+                input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll],parent_states_4[mm],parent_states_5[nn])]]
+              })
+            })
+          })
+            })
+          })
         })
       }
       network <<- add_CPT_to_node(network, node_ID, CPT)
@@ -327,17 +447,31 @@ function(input, output, session) {
     }
   })
   
-  output$CPT <- renderDataTable({
+  output$CPT <- renderDT({ 
     dims <- dim(network_data$CPT)
     n_dims <- length(dims)
     if(n_dims == 1) {
       network_data$CPT %>% as.matrix
     } else if(n_dims == 2) {
-      network_data$CPT
-    } else if(n_dims == 3) {
-      network_data$CPT %>% array2df
+      network_data$CPT 
+    } else if(n_dims >= 3) {
+      network_data$CPT %>% transform_CPT  
     }
+
+    #options = list(editable = 'cell',selection = 'none')
   })
   
+  # client-side processing
+  # output$x1 = render_dt(
+  #   dims <- dim(network_data$CPT),
+  #   n_dims <- length(dims),
+  #   if(n_dims == 1) {
+  #     network_data$CPT %>% as.matrix, 'cell', FALSE
+  #   } else if(n_dims == 2) {
+  #     network_data$CPT
+  #   } else if(n_dims >= 3) {
+  #     network_data$CPT %>% transform_CPT, 'cell', FALSE
+  #   })
   
+  #observe(str(input$CPT_cell_edit))
 }
