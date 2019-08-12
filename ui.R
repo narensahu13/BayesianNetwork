@@ -1,19 +1,5 @@
 #ui function
-library(shiny)
-library(dplyr)
-library(shinycssloaders)
-library(DT)
-library(shinydashboard)
-library(HydeNet)
-library(bnlearn)
-library(Rgraphviz)
-library(BiocManager)
-library(shinyWidgets)
-library(shinytest)
-library(DiagrammeR)
-library(backports)
-library(arrayhelpers)
-library(abind)
+
 # list.of.packages <- c("shiny","dplyr","bnlearn","DiagrammeR","backports","shinycssloaders","DT",
 #                       "shinydashboard","HydeNet","BiocManager","shinyWidgets","shinytest",'Rgraphviz')
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -43,7 +29,7 @@ dashboardPage(skin = 'green',
                 )),
               dashboardBody(tabItems(
                 tabItem(tabName = 'model_structure',
-                        fluidRow(column(width = 4,
+                        fluidRow(column(width = 3,
                                         box(title = 'Model Input', status = 'success', collapsible = T, width = NULL,
                                             helpText('Select a model template or uplaod your saved model'),
                                             radioGroupButtons(inputId = 'dataInput', choices = c('Sample Model' = 1, 'Upload Model' = 2),
@@ -66,15 +52,20 @@ dashboardPage(skin = 'green',
                                             uiOutput('child_node'),
                                             actionBttn('add_child_parent', 'Add New Nodes', icon = icon('floppy-o'), color = 'primary', style = 'pill', size = 'sm'),
                                             actionBttn('delete_nodes_edges', 'Delete Nodes', icon = icon('trash-o'), style = 'pill', color = 'warning', size = 'sm'))),
-                                 column(width = 8,
+                                 column(width = 9,
                                         box(title = 'Model Structure', status = 'success', collapsible = T, width = NULL,
                                             grVizOutput('model_plot')),
                                         div(style="display:inline-block",textInputAddon(inputId = 'exposure', label = 'Define Exposure', placeholder = 'Enter Formula', addon = icon('expand-arrows-alt'))),
-                                        #br(),
+                                        div(style="display:inline-block;vertical-align:bottom;",actionButton(inputId = 'checkx', label = 'Check', icon = icon('check'))),
+                                        hidden(div(id = 'text_div', verbatimTextOutput('outputx')) ),
                                         div(style="display:inline-block",textInputAddon(inputId = 'occurence', label = 'Define Occurence', placeholder = 'Enter Formula', addon = icon('opera'))),
-                                        #br(),
-                                        div(style="display:inline-block",textInputAddon(inputId = 'impact', label = 'Define Impact', placeholder = 'Enter Formula', addon = icon('italic'))))
-                                 )),
+                                        div(style="display:inline-block;vertical-align:bottom;",actionButton(inputId = 'checko', label = 'Check', icon = icon('check'))),
+                                        hidden(div(id = 'text_div', verbatimTextOutput('outputo')) ),
+                                        div(style="display:inline-block",textInputAddon(inputId = 'impact', label = 'Define Impact', placeholder = 'Enter Formula', addon = icon('italic'))),
+                                        div(style="display:inline-block;vertical-align:bottom;",actionButton(inputId = 'checki', label = 'Check', icon = icon('check'))),
+                                        hidden(div(id = 'text_div', verbatimTextOutput('outputi')) )
+                                 )
+                        )),
                 tabItem(tabName = 'model_state',
                         fluidRow(column(width = 4,
                                         box(title = 'Add States', status = 'success', collapsible = T, width = NULL,
@@ -88,20 +79,27 @@ dashboardPage(skin = 'green',
                                             br(),
                                             actionBttn('clear_state', 'Clear all States', icon = icon('trash-alt'), style= 'pill', color = 'danger', size = 'sm'))),
                                  column(width = 4,
-                                        DT::dataTableOutput(outputId = 'node_state_tab')))),
+                                        DT::dataTableOutput(outputId = 'node_state_tab'))
+                        )),
                 tabItem(tabName = 'quantify',
                         fluidRow(column(width = 4,
                                         helpText('Parametrise the node probabilities'),
                                         uiOutput('select_node_for_probs'),
-                                        uiOutput('define_probs_for_node'))),
-                       fluidRow(column(width = 6,
-                               DT::dataTableOutput(outputId = 'CPT')
-                               #DTOutput('CPT')
-                               )),
-                        fluidRow(column(width = 4,
-                                        actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm')))),
+                                        uiOutput('define_probs_for_node')),
+                                 fluidRow(column(width = 4,
+                                                 actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm'))),
+                                 column(width = 8, plotOutput('condplot'),
+                                        plotOutput('margplot'))
+                        ),
+                        fluidRow(column(width = 6,
+                                        DT::dataTableOutput(outputId = 'CPT')
+                                        #DTOutput('CPT')
+                        ))
+                ),
                 tabItem(tabName = 'report',
+                        numericInput(inputId = 'n_sims', label = 'Number of Simulation', value = 1000000),
                         actionBttn('calculate', 'Launch Simulation', icon = icon('bar-chart-o'), style = 'unite', color = 'primary', size = 'sm'),
+                        fluidRow(column(width = 10, plotOutput('histogram'))),
                         DT::dataTableOutput(outputId = 'model_report'),
                         downloadBttn('generate_report', 'Generate Report', color = 'primary', style = 'unite', size = 'sm'))
               ))

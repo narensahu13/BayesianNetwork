@@ -250,19 +250,87 @@ transform_CPT <- function(CPT) {
   return(df)
 }
 
-dt_output = function(title, id) {
-  fluidRow(column(
-    12, h1(paste0('Table ', sub('.*?([0-9]+)$', '\\1', id), ': ', title)),
-    hr(), DTOutput(id)
-  ))
+# dt_output = function(title, id) {
+#   fluidRow(column(
+#     12, h1(paste0('Table ', sub('.*?([0-9]+)$', '\\1', id), ': ', title)),
+#     hr(), DTOutput(id)
+#   ))
+# }
+# render_dt = function(data, editable = 'cell', server = TRUE, ...) {
+#   renderDT(data, selection = 'none', server = server, editable = editable, ...)
+# }
+
+check_formula <- function(formula, network, node) {
+  check <- strapplyc(gsub(" ", "", format(formula), fixed = T), "-?|[a-zA-Z_]+", simplify = T, ignore.case = T) %>%
+    stri_remove_empty %in% network[[node]]$Parents %>% unique
+  if(length(check) == 1) {
+    if(check == TRUE) {cat('OK')} else {cat('Check formula of node:', node)}
+  } else if(length(check) == 2) {cat('Check formula of node', node)}
 }
-render_dt = function(data, editable = 'cell', server = TRUE, ...) {
-  renderDT(data, selection = 'none', server = server, editable = editable, ...)
+
+net_transform <- function(network) {
+  network_sim <- network  ## copy network
+  if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
+    parents_used <- c(network_sim$Exposure$Parents, network_sim$Occurence$Parents, network_sim$Impact$Parents)
+    parent_occurence <- network_sim$Occurence$Parents
+    network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
+  }
+  return(network_sim)
+}
+
+run_simulation <- function(network, n_sims){
+  network_sim <- network %>% net_transform
+  bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
+  bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))
+  sim <- rbn(bnlearn_net_fit,n_sims)
+  sim[parent_occurence] <- ifelse(sim[parent_occurence] == TRUE, 1, 0)  
+  sim[,parents_used] <- lapply(sim[,parents_used], function(x) as.double(as.vector(x)))
+  return(sim)
+}
+
+plot_marinal <- function(network, node) {
+  if(! is.null(network[[node]]$CPT)) {
+    if(is.null(network[[node]]$Parents)) {
+      plot <- barplot( network[[node]]$CPT %>% as.double, names.arg = network[[node]]$States, xlab = 'Probabilities', ylab = node, 
+                       main = 'Marginal Probabilities',col = 'darkolivegreen3',cex.axis=1, cex.names=1.5, cex.lab = 1.5, border = "red",
+                       horiz = T, xlim = c(0, max(network[[node]]$CPT)+0.3))
+      text(y=plot, x=network[[node]]$CPT %>% as.double, signif(network[[node]]$CPT %>% as.double,4) ,pos=2,labels=network[[node]]$CPT %>% as.double %>% percent(accuracy = 0.01))
+    } else {
+      state <- network[[node]]$States
+      for(i in 1: length(network[[node]]$Parents)) { assign(paste0('parent',i), network[[node]]$Parents[i]) }
+      if(length(network[[node]]$Parents) == 1) {
+        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double ) %>% rowSums
+      } else if(length(network[[node]]$Parents) == 2) {
+        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double) %>% rowSums
+      } else if(length(network[[node]]$Parents) == 3) {
+        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double * network[[parent3]]$CPT %>% as.double) %>% rowSums
+      }
+      else if(length(network[[node]]$Parents) == 4) {
+        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double * network[[parent3]]$CPT %>% as.double * network[[parent4]]$CPT %>% as.double) %>% rowSums
+      } else if(length(network[[node]]$Parents) == 5) {
+        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double * network[[parent3]]$CPT %>% as.double * network[[parent4]]$CPT %>% as.double * network[[parent5]]$CPT %>% as.double) %>% rowSums
+      }
+      plot <- barplot( prob, names.arg = state, xlab = 'Probabilities', ylab = node, main = 'Marginal Probabilities',
+                       col = 'darkolivegreen3',cex.axis=1, cex.names=1.5, cex.lab = 1.5, border = "red", horiz = T, xlim = c(0, max(prob)+0.3))
+      text(y=plot, x=prob, pos=4,labels=prob %>% percent(accuracy = 0.01))
+    }
+  }
 }
 # network %>% mapping_bnlearn_network
 # bnlearn_net <- network %>% mapping_bnlearn_network %>% model2network
 # 
 # bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network %>% lapply(function(v) v$CPT))
-# rbn(bnlearn_net_fit,10)
-#
-
+# sim <- rbn(bnlearn_net_fit,1000)
+# sim$Impact <- with(sim, Amount  +  (Income  + Intensity ) *1000 )
+# sim$Exposure <- with(sim, Contractors + Employees )
+# sim$Occurence <- with(sim, Fraud ) 
+# sim$Occurence <- with(sim, ifelse(toupper(Fraud) == "TRUE", 1, 0)  )
+# sim$Loss <- Impact * Exposure * Occurence
+# hist(quantile(sim["Loss"], probs = c(0.90, 0.95, 0.975, 0.99, 0.995, 0.999, 0.9999, 0.999999)))
+# str_replace_all(formulaI,network[["Impact"]]$Parents, paste(network[["Impact"]]$Parents, paste('%>% as.character %>% as.integer')) )
+# graphviz.chart(bnlearn_net_fit, type = 'barprob', layout = 'dot')
+# bn.fit.barchart(bnlearn_net_fit[["Fraud"]],panel=function(x,y,subscripts,...){
+#   panel.grid(h=-1,v=0) 
+#   panel.barchart(...)
+#   panel.text(bnlearn_net_fit[["Fraud"]]$prob,bnlearn_net_fit[["Fraud"]]$prob, labels=t$y, pos=3)
+# })

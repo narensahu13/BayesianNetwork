@@ -187,11 +187,11 @@ function(input, output, session) {
                                                  }
                                                })
   
-  output$node_state_tab2 <- DT::renderDataTable(rownames = F,
-                                                options = list(pageLength = 20, selection = list(State = 'row'), width = 'auto', spacing = 'xs'),
-                                                expr = {
-                                                  network_data$node_states %>% as.matrix
-                                                })
+  # output$node_state_tab2 <- DT::renderDataTable(rownames = F,
+  #                                               options = list(pageLength = 20, selection = list(State = 'row'), width = 'auto', spacing = 'xs'),
+  #                                               expr = {
+  #                                                 network_data$node_states %>% as.matrix
+  #                                               })
   
   #### delete state button ####
   observeEvent(input$delete_state, {
@@ -223,10 +223,11 @@ function(input, output, session) {
   
   output$select_node_for_probs <- renderUI({
     if(!is.null(network_data$node_list)) {
+      remove <- c('Exposure', 'Occurence', 'Impact')
       selectInput(inputId = 'selected_node_for_probs',
                   label = 'Select Node',
                   selectize = F,
-                  choices = c(Choose = '', as.list(network_data$node_list)))
+                  choices = c(Choose = '', as.list(setdiff(network_data$node_list, remove))))
     } else {
       return('No nodes defined in network')
     }
@@ -444,6 +445,23 @@ function(input, output, session) {
       }
       network <<- add_CPT_to_node(network, node_ID, CPT)
       network_data$CPT <- CPT
+      output$condplot <- renderPlot({
+        validate(need(node_ID, 'Choose a Node'))
+        validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
+        network_sim <- network %>% net_transform
+        bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
+        bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))
+        bnlearn::bn.fit.barchart(bnlearn_net_fit[[node_ID]],cex.axis=1.5, cex.names=1.5, cex.lab = 1.5, ylab = node_ID)
+      })
+      output$margplot <- renderPlot({
+        validate(need(node_ID, 'Choose a Node'))
+        validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
+        network_sim <- network  ## copy network
+        # if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
+        #   network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
+        # }
+        plot_marinal(network, node_ID)
+      })
     }
   })
   
@@ -461,17 +479,68 @@ function(input, output, session) {
     #options = list(editable = 'cell',selection = 'none')
   })
   
-  # client-side processing
-  # output$x1 = render_dt(
-  #   dims <- dim(network_data$CPT),
-  #   n_dims <- length(dims),
-  #   if(n_dims == 1) {
-  #     network_data$CPT %>% as.matrix, 'cell', FALSE
-  #   } else if(n_dims == 2) {
-  #     network_data$CPT
-  #   } else if(n_dims >= 3) {
-  #     network_data$CPT %>% transform_CPT, 'cell', FALSE
-  #   })
+  observeEvent(input$selected_node_for_probs,{
+    output$condplot <- renderPlot({
+      node_ID <- input$selected_node_for_probs
+      validate(need(node_ID, 'Choose a Node'))
+      validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
+      network_sim <- network %>% net_transform
+      bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
+      bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))
+      bnlearn::bn.fit.barchart(bnlearn_net_fit[[node_ID]],cex.axis=1.5, cex.names=1.5, cex.lab = 1.5, ylab = node_ID)
+    })
+  })
   
-  #observe(str(input$CPT_cell_edit))
+   observeEvent(input$selected_node_for_probs,{
+     output$margplot <- renderPlot({
+       node_ID <- input$selected_node_for_probs
+       validate(need(node_ID, 'Choose a Node'))
+       validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
+       network_sim <- network  ## copy network
+       if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
+         network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
+       }
+       plot_marinal(network, node_ID)
+     })
+  })
+
+
+  observeEvent(input$checkx, {
+    toggle('text_div')
+    formula_exposure <- input$exposure
+    output$outputx <- renderPrint({ check_formula(formula_exposure, network, 'Exposure') })
+  })
+  
+  observeEvent(input$checko, {
+    toggle('text_div')
+    formula_occurence <- input$occurence
+    output$outputo <- renderPrint({ check_formula(formula_occurence, network, 'Occurence') })
+  })
+  
+  observeEvent(input$checki, {
+    toggle('text_div')
+    formula_impact <- input$impact
+    output$outputi <- renderPrint({ check_formula(formula_impact, network, 'Impact') })
+  })
+  
+  observeEvent(input$calculate, {
+    n_sims <- input$n_sims
+    formula_exposure <- input$exposure
+    formula_occurence <- input$occurence
+    formula_impact <- input$impact
+    network <<- network
+    sim <- run_simulation(network, n_sims)
+    sim <- sim %>% mutate(Exposure = eval(parse(text=formula_exposure)), Occurence =  eval(parse(text=formula_occurence)),
+                          Impact = eval(parse(text = formula_impact)) ) %>%
+                   mutate(Loss = Exposure * Occurence * Impact)
+    output$histogram <- renderPlot({
+      value <- quantile(sim$Loss, probs = c(0.90, 0.95, 0.99, 0.999, 0.9999))
+      plot<-  barplot(value, xlab = 'Quantile', ylab = 'Expected Loss', col = 'blue', main = 'Loss Distribution', border = 'red',
+                      cex.axis=1.5, cex.names=1.5, cex.lab = 1.5)
+      text(plot, value, paste0('$',format(value, big.mark=',', format = 'f')), pos=3, offset=.1, xpd=TRUE, col='darkgreen',cex=1.5)
+    })
+  }) 
+ 
+  
+
 }
