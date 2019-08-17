@@ -5,7 +5,7 @@
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 # if(length(new.packages)) install.packages(new.packages)
 # lapply(list.of.packages,function(x){library(x,character.only=TRUE)})
-
+source('dependencies.R')
 getOption("repos")
 options(repos = BiocManager::repositories())
 
@@ -55,6 +55,11 @@ dashboardPage(skin = 'green',
                                  column(width = 9,
                                         box(title = 'Model Structure', status = 'success', collapsible = T, width = NULL,
                                             grVizOutput('model_plot')),
+                                        helpText('Define other deterministic Nodes (if any)'),
+                                        uiOutput('formula_node'),
+                                        uiOutput('node_formula'),
+                                        div(style="display:inline-block;vertical-align:bottom;",actionButton(inputId = 'check_formula', label = 'Check', icon = icon('check'))),
+                                        hidden(div(id = 'text_div', verbatimTextOutput('output_formula')) ),
                                         div(style="display:inline-block",textInputAddon(inputId = 'exposure', label = 'Define Exposure', placeholder = 'Enter Formula', addon = icon('expand-arrows-alt'))),
                                         div(style="display:inline-block;vertical-align:bottom;",actionButton(inputId = 'checkx', label = 'Check', icon = icon('check'))),
                                         hidden(div(id = 'text_div', verbatimTextOutput('outputx')) ),
@@ -85,9 +90,8 @@ dashboardPage(skin = 'green',
                         fluidRow(column(width = 4,
                                         helpText('Parametrise the node probabilities'),
                                         uiOutput('select_node_for_probs'),
-                                        uiOutput('define_probs_for_node')),
-                                 fluidRow(column(width = 4,
-                                                 actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm'))),
+                                        uiOutput('define_probs_for_node'),
+                                        actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm')),
                                  column(width = 8, plotOutput('condplot'),
                                         plotOutput('margplot'))
                         ),
@@ -99,7 +103,7 @@ dashboardPage(skin = 'green',
                 tabItem(tabName = 'report',
                         numericInput(inputId = 'n_sims', label = 'Number of Simulation', value = 1000000),
                         actionBttn('calculate', 'Launch Simulation', icon = icon('bar-chart-o'), style = 'unite', color = 'primary', size = 'sm'),
-                        fluidRow(column(width = 10, plotOutput('histogram'))),
+                        fluidRow(column(width = 10, plotOutput('histogram'))) ,
                         DT::dataTableOutput(outputId = 'model_report'),
                         downloadBttn('generate_report', 'Generate Report', color = 'primary', style = 'unite', size = 'sm'))
               ))

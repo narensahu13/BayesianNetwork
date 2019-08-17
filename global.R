@@ -260,6 +260,14 @@ transform_CPT <- function(CPT) {
 #   renderDT(data, selection = 'none', server = server, editable = editable, ...)
 # }
 
+get_formula_node <- function(network) {
+  formula_node_ID <- c()
+  for(id in names(network)) { if(network[[id]]$IS_ROOT == FALSE) { formula_node_ID <- c(formula_node_ID, id)} }
+  remove <- c('Exposure', 'Occurence', 'Impact')
+  formula_node_ID <- setdiff(formula_node_ID, remove)
+  return(formula_node_ID)
+}
+
 check_formula <- function(formula, network, node) {
   check <- strapplyc(gsub(" ", "", format(formula), fixed = T), "-?|[a-zA-Z_]+", simplify = T, ignore.case = T) %>%
     stri_remove_empty %in% network[[node]]$Parents %>% unique
@@ -279,6 +287,8 @@ net_transform <- function(network) {
 }
 
 run_simulation <- function(network, n_sims){
+  parents_used <- c(network$Exposure$Parents, network$Occurence$Parents, network$Impact$Parents)
+  parent_occurence <- network$Occurence$Parents
   network_sim <- network %>% net_transform
   bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
   bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))

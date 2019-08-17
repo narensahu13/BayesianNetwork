@@ -1,6 +1,7 @@
 ###server logic
 
 options(shiny.testmode = T)
+if (is.null(suppressMessages(webshot:::find_phantom()))) { webshot::install_phantomjs() }
 network <- list()
 
 function(input, output, session) {
@@ -18,11 +19,12 @@ function(input, output, session) {
   ################################################################################################################
   ###### #######################                      Structure            #####################################
   #############################################################################################################
-  
+
   #### Parent Node  ####
   output$parent_node <- renderUI({
+    remove <- c('Exposure', 'Occurence', 'Impact')
     selectizeInput(inputId = 'Parent_ID',
-                   choices = c(Choose = '', as.list(network_data$node_list)),
+                   choices = c(Choose = '', as.list(setdiff(network_data$node_list, remove))),
                    multiple = F,
                    label = 'Parent Node',
                    options = list(placeholder = 'Add Parent Node', create = T))
@@ -30,8 +32,9 @@ function(input, output, session) {
   
   #### Child Node ####
   output$child_node <- renderUI({
+    add <- c('Exposure', 'Occurence', 'Impact')
     selectizeInput(inputId = 'Child_ID',
-                   choices = c(Choose = '', as.list(network_data$node_list)),
+                   choices = c(Choose = '', as.list(union(network_data$node_list, add))),
                    multiple = F,
                    label = 'Child Node',
                    options = list(placeholder = 'Add Child Node', create = T))
@@ -52,19 +55,6 @@ function(input, output, session) {
   })
   
   #### Save model ####
-  # observeEvent(input$save_model_to_file, {
-  #   network_saved <- network
-  #   save(network_saved, file = 'network.RData')
-  # })
-  # 
-  # network_saved <- reactiveValues()
-  # observe({
-  #   if(!is.null(network))
-  #     isolate(
-  #       network_saved <<- network
-  #     )
-  # })
-  
   #network <- network
   output$save_model_to_file <- downloadHandler(
     filename = function() {
@@ -120,7 +110,7 @@ function(input, output, session) {
       })
       network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
       network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
-
+      
     }
   })
   
@@ -137,11 +127,12 @@ function(input, output, session) {
   
   #### Define states of the nodes  ####
   output$select_node_for_states <- renderUI({
+    remove <- c('Exposure', 'Occurence', 'Impact')
     if(!is.null(network_data$node_list)) {
       selectInput(inputId = 'selected_node_for_states',
                   label = 'Select Node',
                   selectize = F,
-                  choices = c(Choose ='', as.list(network_data$node_list)))
+                  choices = c(Choose ='', as.list(setdiff(network_data$node_list, remove))))
     } else {
       return('No nodes defined in network')
     }
@@ -187,11 +178,6 @@ function(input, output, session) {
                                                  }
                                                })
   
-  # output$node_state_tab2 <- DT::renderDataTable(rownames = F,
-  #                                               options = list(pageLength = 20, selection = list(State = 'row'), width = 'auto', spacing = 'xs'),
-  #                                               expr = {
-  #                                                 network_data$node_states %>% as.matrix
-  #                                               })
   
   #### delete state button ####
   observeEvent(input$delete_state, {
@@ -227,7 +213,7 @@ function(input, output, session) {
       selectInput(inputId = 'selected_node_for_probs',
                   label = 'Select Node',
                   selectize = F,
-                  choices = c(Choose = '', as.list(setdiff(network_data$node_list, remove))))
+                  choices = c(Choose = '', as.list((network_data$node_list))))
     } else {
       return('No nodes defined in network')
     }
@@ -247,8 +233,8 @@ function(input, output, session) {
         states <- dimnames(CPT)[[1]]
         lapply(1:length(states), function(ii) {
           numericInput(inputId = paste0('n_', node_ID, '_s_', states[ii]),
-                      label = paste0('State: ', states[ii]),
-                      min = 0, max = 1, value = CPT[ii], step = 0.001)
+                       label = paste0('State: ', states[ii]),
+                       min = 0, max = 1, value = CPT[ii], step = 0.001)
         })
       } else if(n_dims == 2) {
         child_states <- dimnames(CPT)[[1]]
@@ -259,16 +245,16 @@ function(input, output, session) {
             paste0("Parent State: ", parent_states[jj]),
             lapply(1:length(child_states), function(ii) {
               numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states[jj]),
-                          label = paste0('Child State: ', child_states[ii]),
-                          min = 0, max = 1, value = CPT[ii,jj], step = 0.001)
+                           label = paste0('Child State: ', child_states[ii]),
+                           min = 0, max = 1, value = CPT[ii,jj], step = 0.001)
             })
           )
         })
       } else if(n_dims ==3 ) {
-          child_states <- dimnames(CPT)[[1]]
-          parent_states_1 <- dimnames(CPT)[[2]]
-          parent_states_2 <- dimnames(CPT)[[3]]
-          lapply(1:length(parent_states_1), function(kk) {
+        child_states <- dimnames(CPT)[[1]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        lapply(1:length(parent_states_1), function(kk) {
           lapply(1:length(parent_states_2), function(jj) {
             list(
               hr(),
@@ -280,16 +266,16 @@ function(input, output, session) {
               })
             )
           })
-          })
+        })
         
       } else if(n_dims ==4 ) {
-          child_states <- dimnames(CPT)[[1]]
-          parent_states_1 <- dimnames(CPT)[[2]]
-          parent_states_2 <- dimnames(CPT)[[3]]
-          parent_states_3 <- dimnames(CPT)[[4]]
-          lapply(1:length(parent_states_1), function(kk) {
-            lapply(1:length(parent_states_2), function(jj) {
-              lapply(1:length(parent_states_3), function(ll) {
+        child_states <- dimnames(CPT)[[1]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_3 <- dimnames(CPT)[[4]]
+        lapply(1:length(parent_states_1), function(kk) {
+          lapply(1:length(parent_states_2), function(jj) {
+            lapply(1:length(parent_states_3), function(ll) {
               list(
                 hr(),
                 paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]),
@@ -300,8 +286,8 @@ function(input, output, session) {
                 })
               )
             })
-            })
           })
+        })
         
       } else if(n_dims ==5 ) {
         child_states <- dimnames(CPT)[[1]]
@@ -313,16 +299,16 @@ function(input, output, session) {
           lapply(1:length(parent_states_2), function(jj) {
             lapply(1:length(parent_states_3), function(ll) {
               lapply(1:length(parent_states_4), function(mm) {
-              list(
-                hr(),
-                paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]," ,", parent_states_4[mm] ),
-                lapply(1:length(child_states), function(ii) {
-                  numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll], parent_states_4[mm]),
-                               label = paste0('Child State: ', child_states[ii]),
-                               min = 0, max = 1, value = CPT[ii,kk,jj,ll,mm], step = 0.001)
-                })
-              )
-            })
+                list(
+                  hr(),
+                  paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]," ,", parent_states_4[mm] ),
+                  lapply(1:length(child_states), function(ii) {
+                    numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll], parent_states_4[mm]),
+                                 label = paste0('Child State: ', child_states[ii]),
+                                 min = 0, max = 1, value = CPT[ii,kk,jj,ll,mm], step = 0.001)
+                  })
+                )
+              })
             })
           })
         })
@@ -339,16 +325,16 @@ function(input, output, session) {
             lapply(1:length(parent_states_3), function(ll) {
               lapply(1:length(parent_states_4), function(mm) {
                 lapply(1:length(parent_states_5), function(nn) {
-                list(
-                  hr(),
-                  paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]," ,", parent_states_4[mm]," ,", parent_states_5[nn] ),
-                  lapply(1:length(child_states), function(ii) {
-                    numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll], parent_states_4[mm], parent_states_5[nn]),
-                                 label = paste0('Child State: ', child_states[ii]),
-                                 min = 0, max = 1, value = CPT[ii,kk,jj,ll,mm,nn], step = 0.001)
-                  })
-                )
-              })
+                  list(
+                    hr(),
+                    paste0("Parent State: ", parent_states_1[kk], " ," ,parent_states_2[jj]," ,", parent_states_3[ll]," ,", parent_states_4[mm]," ,", parent_states_5[nn] ),
+                    lapply(1:length(child_states), function(ii) {
+                      numericInput(inputId = paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj], parent_states_3[ll], parent_states_4[mm], parent_states_5[nn]),
+                                   label = paste0('Child State: ', child_states[ii]),
+                                   min = 0, max = 1, value = CPT[ii,kk,jj,ll,mm,nn], step = 0.001)
+                    })
+                  )
+                })
               })
             })
           })
@@ -382,29 +368,29 @@ function(input, output, session) {
         })
       } else if(n_dims == 3) {
         child_states <- dimnames(CPT)[[1]]
-          parent_states_1 <- dimnames(CPT)[[2]]
-          parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
         CPT[] <- sapply(1:length(parent_states_1), function(kk) {
           sapply(1:length(parent_states_2), function(jj) {
-          sapply(1:length(child_states), function(ii) {
-            input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj])]]
+            sapply(1:length(child_states), function(ii) {
+              input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj])]]
+            })
           })
-        })
         })
       } else if(n_dims == 4) {
         child_states <- dimnames(CPT)[[1]]
-          parent_states_1 <- dimnames(CPT)[[2]]
-          parent_states_2 <- dimnames(CPT)[[3]]
-          parent_states_3 <- dimnames(CPT)[[4]]
-          CPT[] <- sapply(1:length(parent_states_1), function(kk) {
-            sapply(1:length(parent_states_2), function(jj) {
-              sapply(1:length(parent_states_3), function(ll) {
+        parent_states_1 <- dimnames(CPT)[[2]]
+        parent_states_2 <- dimnames(CPT)[[3]]
+        parent_states_3 <- dimnames(CPT)[[4]]
+        CPT[] <- sapply(1:length(parent_states_1), function(kk) {
+          sapply(1:length(parent_states_2), function(jj) {
+            sapply(1:length(parent_states_3), function(ll) {
               sapply(1:length(child_states), function(ii) {
                 input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll])]]
               })
-                })
             })
           })
+        })
       } else if(n_dims == 5) {
         child_states <- dimnames(CPT)[[1]]
         parent_states_1 <- dimnames(CPT)[[2]]
@@ -415,10 +401,10 @@ function(input, output, session) {
           sapply(1:length(parent_states_2), function(jj) {
             sapply(1:length(parent_states_3), function(ll) {
               sapply(1:length(parent_states_4), function(mm) {
-              sapply(1:length(child_states), function(ii) {
-                input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll],parent_states_4[mm])]]
+                sapply(1:length(child_states), function(ii) {
+                  input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll],parent_states_4[mm])]]
+                })
               })
-            })
             })
           })
         })
@@ -434,34 +420,17 @@ function(input, output, session) {
             sapply(1:length(parent_states_3), function(ll) {
               sapply(1:length(parent_states_4), function(mm) {
                 sapply(1:length(parent_states_5), function(nn) {
-              sapply(1:length(child_states), function(ii) {
-                input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll],parent_states_4[mm],parent_states_5[nn])]]
+                  sapply(1:length(child_states), function(ii) {
+                    input[[paste0('n_', node_ID, '_s_', child_states[ii], '_s_', parent_states_1[kk], parent_states_2[jj],parent_states_3[ll],parent_states_4[mm],parent_states_5[nn])]]
+                  })
+                })
               })
-            })
-          })
             })
           })
         })
       }
       network <<- add_CPT_to_node(network, node_ID, CPT)
       network_data$CPT <- CPT
-      output$condplot <- renderPlot({
-        validate(need(node_ID, 'Choose a Node'))
-        validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
-        network_sim <- network %>% net_transform
-        bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
-        bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))
-        bnlearn::bn.fit.barchart(bnlearn_net_fit[[node_ID]],cex.axis=1.5, cex.names=1.5, cex.lab = 1.5, ylab = node_ID)
-      })
-      output$margplot <- renderPlot({
-        validate(need(node_ID, 'Choose a Node'))
-        validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
-        network_sim <- network  ## copy network
-        # if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
-        #   network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
-        # }
-        plot_marinal(network, node_ID)
-      })
     }
   })
   
@@ -475,11 +444,36 @@ function(input, output, session) {
     } else if(n_dims >= 3) {
       network_data$CPT %>% transform_CPT  
     }
-
+    
     #options = list(editable = 'cell',selection = 'none')
   })
+  observeEvent(c(input$clear_model,input$add_child_parent,input$delete_nodes_edges,input$load_model_from_file), {
+  output$formula_node <- renderUI({
+    formula_node_ID <- get_formula_node(network)
+      selectInput(inputId = 'selected_node_for_formula',
+                  label = 'Select Node',
+                  selectize = F,
+                  choices = c(Choose = '', formula_node_ID))
+    })
+
+  })
   
-  observeEvent(input$selected_node_for_probs,{
+  output$node_formula <- renderUI({
+    node_ID <- input$selected_node_for_formula
+    validate(need(node_ID, ''))
+    div(style="display:inline-block",textInputAddon(inputId = paste0(node_ID, '_formula'), 
+                                                    label = paste0('Define ', node_ID),placeholder = 'Enter formula', addon = icon('equals')))
+  })
+  
+  observeEvent(input$check_formula, {
+    toggle('text_div')
+    node_ID <- input$selected_node_for_formula
+    formula_of_node <- input[[paste0(node_ID, '_formula')]]
+    output$output_formula <- renderPrint({ check_formula(formula_of_node, network, node_ID) })
+  })
+  
+  
+  observeEvent(c(input$selected_node_for_probs,input$add_CPT_to_node),{
     output$condplot <- renderPlot({
       node_ID <- input$selected_node_for_probs
       validate(need(node_ID, 'Choose a Node'))
@@ -491,20 +485,20 @@ function(input, output, session) {
     })
   })
   
-   observeEvent(input$selected_node_for_probs,{
-     output$margplot <- renderPlot({
-       node_ID <- input$selected_node_for_probs
-       validate(need(node_ID, 'Choose a Node'))
-       validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
-       network_sim <- network  ## copy network
-       if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
-         network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
-       }
-       plot_marinal(network, node_ID)
-     })
+  observeEvent(c(input$selected_node_for_probs,input$add_CPT_to_node),{
+    output$margplot <- renderPlot({
+      node_ID <- input$selected_node_for_probs
+      validate(need(node_ID, 'Choose a Node'))
+      validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected fa deterministic node'))
+      network_sim <- network  ## copy network
+      if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
+        network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
+      }
+      plot_marinal(network, node_ID)
+    })
   })
-
-
+  
+  
   observeEvent(input$checkx, {
     toggle('text_div')
     formula_exposure <- input$exposure
@@ -522,25 +516,27 @@ function(input, output, session) {
     formula_impact <- input$impact
     output$outputi <- renderPrint({ check_formula(formula_impact, network, 'Impact') })
   })
-  
-  observeEvent(input$calculate, {
-    n_sims <- input$n_sims
-    formula_exposure <- input$exposure
-    formula_occurence <- input$occurence
-    formula_impact <- input$impact
-    network <<- network
-    sim <- run_simulation(network, n_sims)
-    sim <- sim %>% mutate(Exposure = eval(parse(text=formula_exposure)), Occurence =  eval(parse(text=formula_occurence)),
-                          Impact = eval(parse(text = formula_impact)) ) %>%
-                   mutate(Loss = Exposure * Occurence * Impact)
-    output$histogram <- renderPlot({
-      value <- quantile(sim$Loss, probs = c(0.90, 0.95, 0.99, 0.999, 0.9999))
-      plot<-  barplot(value, xlab = 'Quantile', ylab = 'Expected Loss', col = 'blue', main = 'Loss Distribution', border = 'red',
-                      cex.axis=1.5, cex.names=1.5, cex.lab = 1.5)
-      text(plot, value, paste0('$',format(value, big.mark=',', format = 'f')), pos=3, offset=.1, xpd=TRUE, col='darkgreen',cex=1.5)
-    })
-  }) 
- 
-  
 
+  observeEvent(input$calculate, {
+    withProgress(message = 'Calculationin progress...', {
+      n_sims <- input$n_sims
+      formula_exposure <- input$exposure
+      formula_occurence <- input$occurence
+      formula_impact <- input$impact
+      network <<- network
+      sim <- run_simulation(network, n_sims)
+      sim <- sim %>% mutate(Exposure = eval(parse(text=formula_exposure)), Occurence =  eval(parse(text=formula_occurence)),
+                            Impact = eval(parse(text = formula_impact)) ) %>%
+        mutate(Loss = Exposure * Occurence * Impact)
+      output$histogram <- renderPlot({
+        value <- quantile(sim$Loss, probs = c(0.90, 0.95, 0.99, 0.999, 0.9999))
+        plot<-  barplot(value, xlab = 'Quantile', ylab = 'Expected Loss', col = 'blue', main = 'Loss Distribution', border = 'red',
+                        cex.axis=1.5, cex.names=1.5, cex.lab = 1.5)
+        text(plot, value, paste0('$',format(value, big.mark=',', format = 'f')), pos=3, offset=.1, xpd=TRUE, col='darkgreen',cex=1.5)
+      })
+    })
+  })
+  
+  
+  
 }

@@ -5,8 +5,8 @@ account: narendrasahu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 949650
-bundleId: 2289125
+bundleId: 2329382
 url: https://narendrasahu.shinyapps.io/BayesianNetwork/
-when: 1564901291.00055
+when: 1566060998.55359
 asMultiple: FALSE
 asStatic: FALSE
