@@ -87,18 +87,16 @@ dashboardPage(skin = 'green',
                                         DT::dataTableOutput(outputId = 'node_state_tab'))
                         )),
                 tabItem(tabName = 'quantify',
-                        fluidRow(column(width = 4,
+                        fluidRow(column(width = 5,
                                         helpText('Parametrise the node probabilities'),
                                         uiOutput('select_node_for_probs'),
-                                        uiOutput('define_probs_for_node'),
-                                        actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm')),
-                                 column(width = 8, plotOutput('condplot'),
+                                        box(title = 'Conditional Probabilities', collapsible = T, width = 10,
+                                            uiOutput('define_probs_for_node')),
+                                        actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm'),
+                                        DT::dataTableOutput(outputId = 'CPT')),
+                                 column(width = 7, plotOutput('condplot'),
                                         plotOutput('margplot'))
-                        ),
-                        fluidRow(column(width = 6,
-                                        DT::dataTableOutput(outputId = 'CPT')
-                                        #DTOutput('CPT')
-                        ))
+                        )
                 ),
                 tabItem(tabName = 'report',
                         numericInput(inputId = 'n_sims', label = 'Number of Simulation', value = 1000000),

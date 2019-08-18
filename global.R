@@ -293,7 +293,7 @@ run_simulation <- function(network, n_sims){
   bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
   bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))
   sim <- rbn(bnlearn_net_fit,n_sims)
-  sim[parent_occurence] <- ifelse(sim[parent_occurence] == TRUE, 1, 0)  
+  sim[parent_occurence] <- ifelse(toupper(sim[,parent_occurence]) == TRUE, 1, 0)  
   sim[,parents_used] <- lapply(sim[,parents_used], function(x) as.double(as.vector(x)))
   return(sim)
 }
@@ -307,25 +307,43 @@ plot_marinal <- function(network, node) {
       text(y=plot, x=network[[node]]$CPT %>% as.double, signif(network[[node]]$CPT %>% as.double,4) ,pos=2,labels=network[[node]]$CPT %>% as.double %>% percent(accuracy = 0.01))
     } else {
       state <- network[[node]]$States
-      for(i in 1: length(network[[node]]$Parents)) { assign(paste0('parent',i), network[[node]]$Parents[i]) }
-      if(length(network[[node]]$Parents) == 1) {
-        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double ) %>% rowSums
-      } else if(length(network[[node]]$Parents) == 2) {
-        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double) %>% rowSums
-      } else if(length(network[[node]]$Parents) == 3) {
-        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double * network[[parent3]]$CPT %>% as.double) %>% rowSums
-      }
-      else if(length(network[[node]]$Parents) == 4) {
-        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double * network[[parent3]]$CPT %>% as.double * network[[parent4]]$CPT %>% as.double) %>% rowSums
-      } else if(length(network[[node]]$Parents) == 5) {
-        prob <- (network[[node]]$CPT %>% as.data.frame * network[[parent1]]$CPT %>% as.double * network[[parent2]]$CPT %>% as.double * network[[parent3]]$CPT %>% as.double * network[[parent4]]$CPT %>% as.double * network[[parent5]]$CPT %>% as.double) %>% rowSums
-      }
+      prob <- calc_marinal_prob(network, node)
       plot <- barplot( prob, names.arg = state, xlab = 'Probabilities', ylab = node, main = 'Marginal Probabilities',
                        col = 'darkolivegreen3',cex.axis=1, cex.names=1.5, cex.lab = 1.5, border = "red", horiz = T, xlim = c(0, max(prob)+0.3))
       text(y=plot, x=prob, pos=4,labels=prob %>% percent(accuracy = 0.01))
     }
   }
 }
+
+calc_marinal_prob <- function(network, node) {
+  if(! is.null(network[[node]]$CPT)) {
+    dims <- dim(network[[node]]$CPT)
+    n_dims = length(dims)
+    if(n_dims == 1 ) {
+      return( network[[node]]$CPT %>% as.double)
+    } else {
+      for(i in 1: length(network[[node]]$Parents)) { assign(paste0('parent',i), network[[node]]$Parents[i]) } 
+      if(n_dims == 2) {
+        prob <- data.frame(mapply(`*`,network[[node]]$CPT %>% as.data.frame,
+                                  rep(calc_marinal_prob(network, parent1),times=prod(dims[-1])/dims[2]) ,SIMPLIFY=FALSE)) %>% rowSums
+      } else if(n_dims == 3){
+        prob <- data.frame(mapply(`*`,network[[node]]$CPT %>% as.data.frame,
+                                  (rep(calc_marinal_prob(network, parent1),times=prod(dims[-1])/dims[2]) *rep(calc_marinal_prob(network, parent2), each=prod(dims[-1])/dims[3])) ),SIMPLIFY=FALSE) %>% rowSums
+      } else if(n_dims == 4){
+        prob <- data.frame(mapply(`*`,network[[node]]$CPT %>% as.data.frame,
+                                  (rep(calc_marinal_prob(network, parent1), times=prod(dims[-1])/dims[2]) *rep(calc_marinal_prob(network, parent2), each=prod(dims[-1])/dims[3]) *rep(calc_marinal_prob(network, parent3),each=prod(dims[-1])/dims[4])),SIMPLIFY=FALSE)) %>% rowSums
+      } else if(n_dims == 5){
+        prob <- data.frame(mapply(`*`,network[[node]]$CPT %>% as.data.frame,
+                                  (rep(calc_marinal_prob(network, parent1), times=prod(dims[-1])/dims[2]) *rep(calc_marinal_prob(network, parent2), each=prod(dims[-1])/dims[3]) *rep(calc_marinal_prob(network, parent3),each=prod(dims[-1])/dims[4])*rep(calc_marinal_prob(network, parent4),each=prod(dims[-1])/dims[5])),SIMPLIFY=FALSE)) %>% rowSums
+      } else if(n_dims == 6){
+        prob <- data.frame(mapply(`*`,network[[node]]$CPT %>% as.data.frame,
+                                  (rep(calc_marinal_prob(network, parent1), times=prod(dims[-1])/dims[2]) *rep(calc_marinal_prob(network, parent2), each=prod(dims[-1])/dims[3]) *rep(calc_marinal_prob(network, parent3),each=prod(dims[-1])/dims[4])*rep(calc_marinal_prob(network, parent4),each=prod(dims[-1])/dims[5])*rep(calc_marinal_prob(network, parent5),each=prod(dims[-1])/dims[6])),SIMPLIFY=FALSE)) %>% rowSums
+      }
+    }
+  }
+  return(prob)
+}
+
 # network %>% mapping_bnlearn_network
 # bnlearn_net <- network %>% mapping_bnlearn_network %>% model2network
 # 

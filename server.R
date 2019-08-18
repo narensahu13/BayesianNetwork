@@ -213,7 +213,7 @@ function(input, output, session) {
       selectInput(inputId = 'selected_node_for_probs',
                   label = 'Select Node',
                   selectize = F,
-                  choices = c(Choose = '', as.list((network_data$node_list))))
+                  choices = c(Choose = '', as.list(setdiff(network_data$node_list, remove))))
     } else {
       return('No nodes defined in network')
     }
@@ -434,17 +434,18 @@ function(input, output, session) {
     }
   })
   
-  output$CPT <- renderDT({ 
-    dims <- dim(network_data$CPT)
-    n_dims <- length(dims)
-    if(n_dims == 1) {
-      network_data$CPT %>% as.matrix
-    } else if(n_dims == 2) {
-      network_data$CPT 
-    } else if(n_dims >= 3) {
-      network_data$CPT %>% transform_CPT  
-    }
-    
+  observeEvent(input$selected_node_for_probs, {
+    output$CPT <- renderDT({ 
+      dims <- dim(network_data$CPT)
+      n_dims <- length(dims)
+      if(n_dims == 1) {
+        network_data$CPT %>% as.matrix
+      } else if(n_dims == 2) {
+        network_data$CPT 
+      } else if(n_dims >= 3) {
+        network_data$CPT %>% transform_CPT  
+      }
+    })
     #options = list(editable = 'cell',selection = 'none')
   })
   observeEvent(c(input$clear_model,input$add_child_parent,input$delete_nodes_edges,input$load_model_from_file), {
@@ -476,8 +477,8 @@ function(input, output, session) {
   observeEvent(c(input$selected_node_for_probs,input$add_CPT_to_node),{
     output$condplot <- renderPlot({
       node_ID <- input$selected_node_for_probs
-      validate(need(node_ID, 'Choose a Node'))
-      validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
+      validate(need(node_ID, ''))
+      #validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
       network_sim <- network %>% net_transform
       bnlearn_net <- network_sim %>% mapping_bnlearn_network %>% model2network
       bnlearn_net_fit <- custom.fit(bnlearn_net, dist = network_sim %>% lapply(function(v) v$CPT))
@@ -488,8 +489,8 @@ function(input, output, session) {
   observeEvent(c(input$selected_node_for_probs,input$add_CPT_to_node),{
     output$margplot <- renderPlot({
       node_ID <- input$selected_node_for_probs
-      validate(need(node_ID, 'Choose a Node'))
-      validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected fa deterministic node'))
+      validate(need(node_ID, ''))
+      #validate(need(! is.null(network[[node_ID]]$CPT), 'You have selected a deterministic node'))
       network_sim <- network  ## copy network
       if( c('Exposure', 'Occurence', 'Impact')  %in%  names(network_sim) %>% unique == TRUE) {
         network_sim[["Impact"]] <- network_sim[["Exposure"]] <- network_sim[["Occurence"]] <- NULL
@@ -518,12 +519,12 @@ function(input, output, session) {
   })
 
   observeEvent(input$calculate, {
-    withProgress(message = 'Calculationin progress...', {
+    withProgress(message = 'Calculationin progress...', style = 'old', {
       n_sims <- input$n_sims
       formula_exposure <- input$exposure
       formula_occurence <- input$occurence
       formula_impact <- input$impact
-      network <<- network
+      network <- network
       sim <- run_simulation(network, n_sims)
       sim <- sim %>% mutate(Exposure = eval(parse(text=formula_exposure)), Occurence =  eval(parse(text=formula_occurence)),
                             Impact = eval(parse(text = formula_impact)) ) %>%
@@ -532,7 +533,7 @@ function(input, output, session) {
         value <- quantile(sim$Loss, probs = c(0.90, 0.95, 0.99, 0.999, 0.9999))
         plot<-  barplot(value, xlab = 'Quantile', ylab = 'Expected Loss', col = 'blue', main = 'Loss Distribution', border = 'red',
                         cex.axis=1.5, cex.names=1.5, cex.lab = 1.5)
-        text(plot, value, paste0('$',format(value, big.mark=',', format = 'f')), pos=3, offset=.1, xpd=TRUE, col='darkgreen',cex=1.5)
+        text(plot, value, paste0('$',formatC(value, big.mark=',', format = 'd')), pos=3, offset=.1, xpd=TRUE, col='darkgreen',cex=1.5)
       })
     })
   })
