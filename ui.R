@@ -1,10 +1,5 @@
 #ui function
 
-# list.of.packages <- c("shiny","dplyr","bnlearn","DiagrammeR","backports","shinycssloaders","DT",
-#                       "shinydashboard","HydeNet","BiocManager","shinyWidgets","shinytest",'Rgraphviz')
-# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-# if(length(new.packages)) install.packages(new.packages)
-# lapply(list.of.packages,function(x){library(x,character.only=TRUE)})
 source('dependencies.R')
 getOption("repos")
 options(repos = BiocManager::repositories())
@@ -29,6 +24,7 @@ dashboardPage(skin = 'green',
                 )),
               dashboardBody(tabItems(
                 tabItem(tabName = 'model_structure',
+                        hidden(div(id = 'text_div', textOutput('model_name')) ),
                         fluidRow(column(width = 3,
                                         box(title = 'Model Input', status = 'success', collapsible = T, width = NULL,
                                             helpText('Select a model template or uplaod your saved model'),
@@ -46,7 +42,9 @@ dashboardPage(skin = 'green',
                                                                        strong('Model Input:')))),
                                         box(title = 'Save Model', status = 'success', collapsible = T, width = NULL,
                                             actionBttn('clear_model', 'Clear Model', icon = icon('times-circle'), style = 'jelly', color = 'danger', size = 'sm'),
-                                            downloadBttn('save_model_to_file', 'Save Model', style = 'jelly', color = 'primary', size = 'sm')),
+                                            useShinyalert(),
+                                            downloadBttn('save_model_to_file', 'Save Model', style = 'jelly', color = 'primary', size = 'sm'),
+                                            useShinyalert()),
                                         box(title = 'Add Nodes and Relationship', status = 'success', collapsible = T, width = NULL,
                                             uiOutput('parent_node'),
                                             uiOutput('child_node'),
@@ -90,19 +88,21 @@ dashboardPage(skin = 'green',
                         fluidRow(column(width = 5,
                                         helpText('Parametrise the node probabilities'),
                                         uiOutput('select_node_for_probs'),
-                                        box(title = 'Conditional Probabilities', collapsible = T, width = 10,
-                                            uiOutput('define_probs_for_node')),
+                                        # box(title = 'Conditional Probabilities', collapsible = T, width = 10,
+                                        #     uiOutput('define_probs_for_node')),
                                         actionBttn('add_CPT_to_node', 'Add CPT to Node', icon = icon('link'), style = 'unite', color = 'success', size = 'sm'),
-                                        DT::dataTableOutput(outputId = 'CPT')),
+                                        useShinyalert(),  # Set up shinyalert
+                                        #dataTableOutput(outputId = 'CPT')
+                                        DT::DTOutput('CPT')),
                                  column(width = 7, plotOutput('condplot'),
-                                        plotOutput('margplot'))
+                                                   plotOutput('margplot'))
                         )
                 ),
                 tabItem(tabName = 'report',
                         numericInput(inputId = 'n_sims', label = 'Number of Simulation', value = 1000000),
                         actionBttn('calculate', 'Launch Simulation', icon = icon('bar-chart-o'), style = 'unite', color = 'primary', size = 'sm'),
-                        fluidRow(column(width = 10, plotOutput('histogram'))) ,
-                        DT::dataTableOutput(outputId = 'model_report'),
+                        fluidRow(column(width = 8, plotOutput('histogram')),
+                                 column(width = 4, htmlOutput('text_out'))) ,
                         downloadBttn('generate_report', 'Generate Report', color = 'primary', style = 'unite', size = 'sm'))
               ))
 )

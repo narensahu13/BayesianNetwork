@@ -1,3 +1,9 @@
+# list.of.packages <- c("shiny","dplyr","bnlearn","DiagrammeR","backports","shinycssloaders","DT",
+#                       "shinydashboard","HydeNet","BiocManager","shinyWidgets","shinytest",'Rgraphviz')
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages)) install.packages(new.packages)
+# lapply(list.of.packages,function(x){library(x,character.only=TRUE)})
+
 library(shiny)
 library(dplyr)
 library(shinycssloaders)
@@ -18,3 +24,7 @@ library(stringi)
 library(gsubfn)
 library(lattice)
 library(scales)
+library(shinyalert)
+library(e1071)
+library(PerformanceAnalytics)
+library(rhandsontable)
