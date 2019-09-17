@@ -10,7 +10,8 @@ function(input, output, session) {
     node_list = NULL,
     Hyde_plot = NULL,
     node_states = NULL,
-    CPT = NULL
+    CPT = NULL,
+    model = NULL
   )
   HydePlotOptions(variable = list(shape = "ellipse", fillcolor = "#A6DBA0"), 
                   determ = list(shape = "rect", fillcolor = "#E7D4E8", fontcolor = "#1B7837", linecolor = "#1B7837"),
@@ -73,15 +74,11 @@ function(input, output, session) {
       if(input$net == 1) {
         load(file = 'Fraudmodel.RData')
         network <<- network
+        model_name <<- model_name
       } else if (input$net == 2) {
-        load(file = 'network2.RData')
-        network <<- network
-      } else if (input$net == 3) {
-        load(file = 'network3.RData')
-        network <<- network
-      } else if (input$net == 4) {
         load(file = 'BuildingDestruction.RData')
         network <<- network
+        model_name <<- model_name
       }
     } else if (input$dataInput == 2) {
       inFile <- input$load_model_from_file
@@ -94,6 +91,7 @@ function(input, output, session) {
     #rm(network_saved)
     network_data$node_list <- network %>% mapping_bnlearn_network %>% model2network %>% node.ordering
     network_data$Hyde_plot <- network %>% mapping_Hydenet_network %>% HydeNetwork %>% plot
+    network_data$model <- model_name
   })
   
   #### clear the model ####
@@ -103,16 +101,17 @@ function(input, output, session) {
     network_data$node_states <- NULL
     network_data$Hyde_plot <- NULL
     network_data$CPT <- NULL
+    network_data$model <- NULL
     shinyalert('New model name', type='input', callbackR = mycallback)
     
   })
 
     mycallback <- function(value) {
       model_name <<- value
-      toggle('text_div')
-      output$model_name <- renderText({ paste("Model Name: ", value ) })
+      network_data$model <- model_name
+      #toggle('text_div')
     }
-
+    output$model_name <- renderText({ paste("Model Name: ", network_data$model ) })
   #### delete nodes ####
   observeEvent(input$delete_nodes_edges, {
     if(!is.null(input$delete_nodes_edges) & input$delete_nodes_edges > 0){

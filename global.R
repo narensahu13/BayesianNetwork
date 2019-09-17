@@ -191,9 +191,10 @@ define_determ_node <- function(network, node_ID, formula) {
           dimnams <- structure(parent_states, .Names = network[[node_ID]]$Parents) 
           check <- anyNA(dimnams %>% unlist)
           if(!check) {
-            network[[node_ID]]$States <- dimnams %>% as.data.frame %>% mutate( states = eval(parse(text=formula))) %>% select(states) %>% unlist %>% as.character
+            network[[node_ID]]$States <- dimnams %>% as.vector %>% expand.grid %>% as.data.frame %>% mutate( states = eval(parse(text=formula))) %>% select(states) %>% unlist %>% as.character
             CPT <- calc_CPT_structure_for_node(network, node_ID) %>% transform_CPT
             
+            tail.matrix(CPT[-1], length(network[[node_ID]]$States) ) %>% as.array  %>% unlist %>% as.double %>% c 
            
           }
         }
@@ -244,7 +245,7 @@ update_cpt_to_network <- function(network, node_ID, CPT_array) {
       transformed_cpt <- tail.matrix(CPT_array, length(network[[node_ID]]$States) )
     }
     if(n_dims >= 3){
-      transformed_cpt <- tail.matrix(CPT_array[-1], -length(network[[node_ID]]$States) ) %>% as.array %>% unlist %>% as.double %>% c
+      transformed_cpt <- tail.matrix(CPT_array[-1], length(network[[node_ID]]$States) ) %>% as.array %>% unlist %>% as.double %>% c
     }
     #network[[node_ID]]$CPT[1:prod(dims)] <- transformed_cpt
     network <- add_CPT_to_node(network, node_ID,transformed_cpt )
