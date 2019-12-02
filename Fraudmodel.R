@@ -55,4 +55,19 @@ network <- add_CPT_to_node(network,'Income',c(1,0,0,0,1,0,0,0,1))
 # network <- add_CPT_to_node(network,'Exposure',c(0.8,0.2,0.5,0.5,0.6,0.4))
 # network <- add_CPT_to_node(network,'Impact',c(0.2,0.8,0.1,0.9,0.15,0.85,0.2,0.8,0.3,0.7,0.4,0.6,0.5,0.5,0.4,0.6,0.1,0.9))
 
-save(network, file = 'Fraudmodel.RData')
+network$Level$Type <- 'Level'
+network$Level$Is_determ <- 'No'
+network$Contractors$Type <- 'Numeric'
+network$Contractors$Is_determ <- 'No's
+network$Employees$Type <- 'Numeric'
+network$Employees$Is_determ <- 'No'
+network$Intensity$Type <- 'Numeric'
+network$Amount$Type <- 'Numeric'
+network$Income$Type <- 'Numeric'
+network$Intensity$Is_determ <- 'No'
+network$Amount$Is_determ <- 'No'
+network$Income$Is_determ <- 'No'
+network$Fraud$Type <- 'Boolean'
+network$Fraud$Is_determ <- 'No'
+
+save(network,model_name, file = 'Fraudmodel.RData')

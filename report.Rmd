@@ -1,0 +1,28 @@
+---
+title: "Scenario report"
+output: pdf_document
+---
+```{r}
+model_name
+Date: Sys.Date
+```
+\newpage
+```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
+# Graph
+knitr::include_graphics(path="temp.png",auto_pdf = TRUE)
+```
+
+
+```{r, echo=FALSE}
+# The `params` object is available in the document.
+kable(value, caption = 'Loss distribution')
+```
+
+A plot of params$model_name random points.
+
+
+Update: since the answer from @r2evans, it is much easier to insert images into R Markdown and control the size of the image.
+
+Images
+The bookdown book does a great job of explaining that the best way to include images is by using include_graphics(). For example, a full width image can be printed with a caption below:
+

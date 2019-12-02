@@ -60,21 +60,21 @@ network <- add_state_to_node(network,'DailyRevenue','40000')
 network <- add_state_to_node(network,'NonAuto','0.1')
 network <- add_state_to_node(network,'SlowDown','1')
 network <- add_state_to_node(network,'SwitichingTime','20')
-network <- add_state_to_node(network,'PropertyDamage','10000')
-network <- add_state_to_node(network,'PropertyDamage','20000')
-network <- add_state_to_node(network,'PropertyDamage','50000')
-network <- add_state_to_node(network,'PropertyDamage','5000')
-network <- add_state_to_node(network,'PropertyDamage','25000')
-network <- add_state_to_node(network,'PropertyDamage','30000')
+# network <- add_state_to_node(network,'PropertyDamage','10000')
+# network <- add_state_to_node(network,'PropertyDamage','20000')
+# network <- add_state_to_node(network,'PropertyDamage','50000')
+# network <- add_state_to_node(network,'PropertyDamage','5000')
+# network <- add_state_to_node(network,'PropertyDamage','25000')
+# network <- add_state_to_node(network,'PropertyDamage','30000')
 network <- add_state_to_node(network,'AdditionalCost','1000')
 network <- add_state_to_node(network,'AdditionalCost','2000')
 network <- add_state_to_node(network,'AdditionalCost','5000')
 network <- add_state_to_node(network,'AdditionalCost','6000')
 network <- add_state_to_node(network,'AdditionalCost','7000')
-network <- add_state_to_node(network,'RevenueLoss','1000')
-network <- add_state_to_node(network,'RevenueLoss','2000')
-network <- add_state_to_node(network,'RevenueLoss','3000')
-network <- add_state_to_node(network,'RevenueLoss','4000')
+# network <- add_state_to_node(network,'RevenueLoss','1000')
+# network <- add_state_to_node(network,'RevenueLoss','2000')
+# network <- add_state_to_node(network,'RevenueLoss','3000')
+# network <- add_state_to_node(network,'RevenueLoss','4000')
 
 network <- add_CPT_to_node(network,'NbBuildings',c(1))
 network <- add_CPT_to_node(network,'ClimateScenario',c(0.1,0.2,0.3,0.4))
@@ -88,9 +88,43 @@ network <- add_CPT_to_node(network,'DailyRevenue',c(0,0.25,0.5,0.25,0,0.25,0.25,
 network <- add_CPT_to_node(network,'NonAuto',c(1))
 network <- add_CPT_to_node(network,'SlowDown',c(1))
 network <- add_CPT_to_node(network,'SwitichingTime',c(1))
-network <- add_CPT_to_node(network,'PropertyDamage',c(0.1,0.2,0.1,0.1,0.2,0.3, 0.2,0.2,0.2,0.1,0.1,0.2, 0.3,0.3,0.1,0.1,0.1,0.1,
-                                                      0.1,0.2,0.1,0.1,0.2,0.3, 0.2,0.2,0.2,0.1,0.1,0.2, 0.3,0.3,0.1,0.1,0.1,0.1))
+#network <- add_CPT_to_node(network,'PropertyDamage',c(0.1,0.2,0.1,0.1,0.2,0.3, 0.2,0.2,0.2,0.1,0.1,0.2, 0.3,0.3,0.1,0.1,0.1,0.1,
+#                                                      0.1,0.2,0.1,0.1,0.2,0.3, 0.2,0.2,0.2,0.1,0.1,0.2, 0.3,0.3,0.1,0.1,0.1,0.1))
 network <- add_CPT_to_node(network,'AdditionalCost',c(0.3,0.3,0.1,0.2,0.1,0.2,0.2,0.2,0.2,0.2))
-network <- add_CPT_to_node(network,'RevenueLoss',c(0,0.25,0.5,0.25, 0,0.25,0.25,0.5 ,0.2,0.2,0.3,0.3, 0.2,0.2,0.3,0.3))
+#network <- add_CPT_to_node(network,'RevenueLoss',c(0,0.25,0.5,0.25, 0,0.25,0.25,0.5 ,0.2,0.2,0.3,0.3, 0.2,0.2,0.3,0.3))
 
-# save(network, file = 'BuildingDestruction.RData')
+network$NbBuildings$Type <- 'Numeric'
+network$NbBuildings$Is_determ <- 'No'
+network$ClimateScenario$Type <- 'Level'
+network$ClimateScenario$Is_determ <- 'No'
+network$Location$Type <- 'Level'
+network$Location$Is_determ <- 'No'
+network$Disaster$Type <- 'Boolean'
+network$Disaster$Is_determ <- 'No'
+network$EventIntensity$Type <- 'Level'
+network$EventIntensity$Is_determ <- 'No'
+network$BuildingValue$Type <- 'Numeric'
+network$BuildingValue$Is_determ <- 'No'
+network$DamageRate$Type <- 'Numeric'
+network$DamageRate$Is_determ <- 'No'
+network$PropertyDamage$Type <- 'Numeric'
+network$PropertyDamage$Is_determ <- 'Yes'
+network$PropertyDamage$formula <- 'DamageRate*BuildingValue'
+network$AdditionalCost$Type <- 'Numeric'
+network$AdditionalCost$Is_determ <- 'No'
+network$DailyRevenue$Type <- 'Numeric'
+network$DailyRevenue$Is_determ <- 'No'
+network$NonAuto$Type <- 'Numeric'
+network$NonAuto$Is_determ <- 'No'
+network$SlowDown$Type <- 'Numeric'
+network$SlowDown$Is_determ <- 'No'
+network$SwitichingTime$Type <- 'Numeric'
+network$SwitichingTime$Is_determ <- 'No'
+network$RevenueLoss$Type <- 'Numeric'
+network$RevenueLoss$Is_determ <- 'Yes'
+network$RevenueLoss$formula <- 'SwitichingTime*SlowDown*NonAuto*DailyRevenue'
+
+network <- define_determ_node(network,'PropertyDamage',network$PropertyDamage$formula)
+network <- define_determ_node(network,'RevenueLoss',network$RevenueLoss$formula)
+
+save(network,model_name, file = 'BuildingDestruction.RData')
