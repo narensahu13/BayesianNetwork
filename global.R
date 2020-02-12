@@ -574,7 +574,7 @@ check_formula <- function(formula, network, node_ID) {
     parents_type <- network[[node_ID]]$Parents %>% lapply(function(nodenam) network[[nodenam]]$Type) %>% unique 
     # check <- strapply(gsub(" ", "", format(formula), fixed = T), "-?|[a-zA-Z_]+", simplify = T, ignore.case = T) %>%
     #  stri_remove_empty %in% network[[node_ID]]$Parents %>% unique
-    res <- trimws(el(strsplit(formula, "\\+|\\-|\\*|\\/|\\(|\\)")))
+    res <- trimws(el(strsplit(formula, "\\+|\\-|\\*|\\/|\\,|\\pmin|\\pmax|\\log|\\^|\\(|\\)|\\(|\\)")))
     check <- res[is.na(suppressWarnings(as.numeric(res)))] %>% stri_remove_empty %in% network[[node_ID]]$Parents %>% unique
     if((length(check) == 1) & (length(parents_type)==1) ) {
       if((check == TRUE) & (parents_type == 'Numeric' | parents_type == 'Boolean')) {
@@ -621,6 +621,14 @@ net_transform_node <- function(network, node_ID) {
   return(network_sim)
 }
 
+RepParallel <- function(n, expr, simplify = "array",...) {
+  answer <-
+    mclapply(integer(n), eval.parent(substitute(function(...) expr)),...)
+  if (!identical(simplify, FALSE) && length(answer)) 
+    return(simplify2array(answer, higher = (simplify == "array")))
+  else return(answer)
+}
+
 do_simulation <- function(network,bnlearn_net_fit,blocksize,formula_occurence,formula_impact) {
   parents_used <- c(network$Exposure$Parents, network$Occurence$Parents, network$Impact$Parents)
   parent_occurence <- network$Occurence$Parents
@@ -647,7 +655,7 @@ run_simulation <- function(network, exposure_sim,n_sims,formula_occurence,formul
     blocksize <- tot_num_vec
     n_blocks <- 1
   }
-  sim <- do.call("rbind", replicate(n_blocks, {
+  sim <- do.call("rbind", RepParallel(n_blocks, {
     do_simulation(network,bnlearn_net_fit,blocksize,formula_occurence,formula_impact)
   }, simplify = FALSE)) %>% as.data.frame
   sim <- sim[1:length(Iter_vec),] %>% mutate(Iter_vec)

@@ -3,8 +3,12 @@
 #setwd(Dir)
 
 source('dependencies.R')
-getOption("repos")
-options(repos = BiocManager::repositories())
+
+#options(repos = c(getOption("repos"), BiocInstaller::biocinstallRepos()))
+#getOption("repos")
+options(repos = c(getOption("repos"), BiocManager::repositories()))
+#packrat:::appDependencies()
+#grep("Rcpp", list.files(recursive = TRUE), fixed = TRUE, value = TRUE)
 
 dashboardPage(skin = 'green',
               dashboardHeader(title = 'Bayesian Network',
@@ -55,7 +59,9 @@ dashboardPage(skin = 'green',
                                               uiOutput('parent_node'),
                                               uiOutput('child_node'),
                                               actionBttn('add_child_parent', 'Add New Nodes', icon = icon('floppy-o'), color = 'primary', style = 'pill', size = 'sm'),
-                                              actionBttn('delete_nodes_edges', 'Delete Nodes', icon = icon('trash-o'), style = 'pill', color = 'warning', size = 'sm'))),
+                                              actionBttn('delete_nodes_edges', 'Delete Nodes', icon = icon('trash-o'), style = 'pill', color = 'warning', size = 'sm')),
+                                          # Add introjs btn
+                                          shiny::actionButton("structureIntro", "Help", icon = icon('info-circle'))),
                                    column(width = 9,
                                           box(title = 'Model Structure', status = 'success', collapsible = T, width = NULL,
                                               grVizOutput('model_plot')),
@@ -74,9 +80,8 @@ dashboardPage(skin = 'green',
                                           div(style="display:inline-block;vertical-align:bottom;",actionButton(inputId = 'checki', label = 'Check', icon = icon('check'))),
                                           hidden(div(id = 'text_div', verbatimTextOutput('outputi')) )
                                    )
+                          )
                           ),
-                          # Add introjs btn
-                          shiny::actionButton("structureIntro", "Help", icon = icon('info-circle'))),
                   tabItem(tabName = 'model_state',
                           fluidRow(column(width = 4,
                                           box(title = 'Add States', status = 'success', collapsible = T, width = NULL,
