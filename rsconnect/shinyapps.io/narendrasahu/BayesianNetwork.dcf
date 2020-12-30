@@ -5,9 +5,9 @@ account: narendrasahu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 949650
-bundleId: 2793956
+bundleId: 2806981
 url: https://narendrasahu.shinyapps.io/BayesianNetwork/
-when: 1581480492.84311
+when: 1581960469.19258
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: ~$CyberAttack.pptx

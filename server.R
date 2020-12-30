@@ -141,7 +141,7 @@ function(input, output, session) {
   })
   
   #### plot network ####
-  output$model_plot <- renderGrViz({
+  output$model_plot <-DiagrammeR::renderGrViz({
     if(is.null(network))
       return(NULL)
     network_data$Hyde_plot
