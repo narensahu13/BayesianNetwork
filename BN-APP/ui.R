@@ -12,12 +12,12 @@ options(repos = c(getOption("repos"), BiocManager::repositories()))
 
 dashboardPage(skin = 'green',
               dashboardHeader(title = 'Bayesian Network',
-                              tags$li(a(href = 'http://ey.com',
-                                        img(src = 'logo.png',
-                                            title = "Who we are", height = "45px", align = "right"),
+                              tags$li(a(href = '',
+                                        img(src = '',
+                                            title = "", height = "45px", align = "right"),
                                         style = 'padding-top:2px;padding-bottom:2px;'),
                                       class = 'dropdown'),
-                              tags$li (a(href = 'http://ey.com', icon('send'),title = 'visit us'), class = 'dropdown')),
+                              tags$li (a(href = '', icon('send'),title = 'visit us'), class = 'dropdown')),
               dashboardSidebar(
                 sidebarMenu(id = 'side_tab',
                             tags$head(

@@ -10,14 +10,9 @@ options(repos = c(getOption("repos"), BiocManager::repositories()))
 #packrat:::appDependencies()
 #grep("Rcpp", list.files(recursive = TRUE), fixed = TRUE, value = TRUE)
 
-dashboardPage(skin = 'green',
-              dashboardHeader(title = 'Bayesian Network',
-                              tags$li(a(href = 'http://ey.com',
-                                        img(src = 'logo.png',
-                                            title = "Who we are", height = "45px", align = "right"),
-                                        style = 'padding-top:2px;padding-bottom:2px;'),
-                                      class = 'dropdown'),
-                              tags$li (a(href = 'http://ey.com', icon('send'),title = 'visit us'), class = 'dropdown')),
+dashboardPage(skin = 'blue',
+              dashboardHeader(title = 'Bayesian Network'
+                              ),
               dashboardSidebar(
                 sidebarMenu(id = 'side_tab',
                             tags$head(

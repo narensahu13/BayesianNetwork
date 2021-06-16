@@ -1,0 +1,12 @@
+name: XOI-modelling
+title: XOI-modelling
+username:
+account: collections
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4273656
+bundleId: 4721517
+url: https://collections.shinyapps.io/XOI-modelling/
+when: 1623820950.10243
+asMultiple: FALSE
+asStatic: FALSE
